@@ -9,9 +9,10 @@ from .norm_connector import NormConnector
 from .ofd_connector import OFDTeacherConnector
 from .torch_connector import TorchFunctionalConnector, TorchNNConnector
 
+from .fuse_connector import FuseConnector
 __all__ = [
     'ConvModuleConnector', 'Translator', 'Paraphraser', 'BYOTConnector',
     'FBKDTeacherConnector', 'FBKDStudentConnector', 'TorchFunctionalConnector',
     'CRDConnector', 'TorchNNConnector', 'OFDTeacherConnector', 'MGDConnector',
-    'NormConnector'
+    'NormConnector', 'FuseConnector'
 ]

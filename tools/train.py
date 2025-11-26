@@ -52,8 +52,12 @@ def parse_args():
 
 
 def main():
-    register_all_modules(False)
+    #register_all_modules(False)
     args = parse_args()
+
+
+
+    register_all_modules(init_default_scope=True)
 
     # load config
     cfg = Config.fromfile(args.config)

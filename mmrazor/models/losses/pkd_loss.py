@@ -81,3 +81,57 @@ class PKDLoss(nn.Module):
             loss += F.mse_loss(norm_S, norm_T) / 2
 
         return loss * self.loss_weight
+
+
+@MODELS.register_module()
+class yolo_real_PKDLoss(nn.Module):
+#pkd加了通道对齐
+    def __init__(self, loss_weight=1.0, resize_stu=True):
+        super(yolo_real_PKDLoss, self).__init__()
+        self.loss_weight = loss_weight
+        self.resize_stu = resize_stu
+
+    def norm(self, feat: torch.Tensor) -> torch.Tensor:
+        """Normalize the feature maps to have zero mean and unit variances.
+
+        Args:
+            feat (torch.Tensor): The original feature map with shape
+                (N, C, H, W).
+        """
+        assert len(feat.shape) == 4
+        N, C, H, W = feat.shape
+        feat = feat.permute(1, 0, 2, 3).reshape(C, -1)
+        mean = feat.mean(dim=-1, keepdim=True)
+        std = feat.std(dim=-1, keepdim=True)
+        feat = (feat - mean) / (std + 1e-6)
+        return feat.reshape(C, N, H, W).permute(1, 0, 2, 3)
+
+    def forward(self, preds_S: Union[torch.Tensor, Tuple],
+                preds_T: Union[torch.Tensor, Tuple]) -> torch.Tensor:
+
+        if isinstance(preds_S, torch.Tensor):
+            preds_S, preds_T = (preds_S, ), (preds_T, )
+
+        loss = 0.
+
+        for pred_S, pred_T in zip(preds_S, preds_T):
+            size_S, size_T = pred_S.shape[2:], pred_T.shape[2:]
+            if pred_S.shape[1] != pred_T.shape[1]:
+                align_conv = nn.Conv2d(pred_T.shape[1], pred_S.shape[1], kernel_size=1).to(pred_T.device)
+                pred_T = align_conv(pred_T)
+            if size_S[0] != size_T[0]:
+                if self.resize_stu:
+                    pred_S = F.interpolate(pred_S, size_T, mode='bilinear')
+                else:
+                    pred_T = F.interpolate(pred_T, size_S, mode='bilinear')
+            assert pred_S.shape == pred_T.shape
+
+            norm_S, norm_T = self.norm(pred_S), self.norm(pred_T)
+
+            # First conduct feature normalization and then calculate the
+            # MSE loss. Methematically, it is equivalent to firstly calculate
+            # the Pearson Correlation Coefficient (r) between two feature
+            # vectors, and then use 1-r as the new feature imitation loss.
+            loss += F.mse_loss(norm_S, norm_T) / 2
+
+        return loss * self.loss_weight

@@ -113,6 +113,12 @@ venv.bak/
 /work_dirs
 /mmrazor/.mim
 *.out
+/Ablation
+/PAA
+/rebuttal
+/hypothesis
+/hyp
+/gfl
 
 # Pytorch
 *.pth

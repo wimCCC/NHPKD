@@ -113,8 +113,8 @@ class FBKDLoss(nn.Module):
         losses += torch.dist(t_spatial_pool,
                              s_spatial_pool_adapt) * self.spatial_weight
 
-        # nonlocal_loss
-        losses += torch.dist(
-            t_relation, s_relation_adapt, p=2) * self.nonloacl_weight
+        # # nonlocal_loss
+        # losses += torch.dist(
+        #     t_relation, s_relation_adapt, p=2) * self.nonloacl_weight
 
         return self.loss_weight * losses
